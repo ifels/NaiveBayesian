@@ -165,8 +165,54 @@ void loadModel(){
 	string sline;
 	getline(fin, sline);
 	printf("sline = %s\n", sline.c_str());
+	
+	vector<string> items = split(sline, ' ');
+	if(items.size() < 6){
+		printf("Modle format error!\n");
+	}
+	int len = items.size();
+	for(int i=0; i < len; ){
+		int classId = atoi(items[i].c_str());
+		if(++i >= len){
+			printf("Model format error!\n");
+			return;
+		}
+		_classProb[classId] = atof(items[i].c_str());
+		if(++i >= len){
+			printf("Model format error!\n");
+			return;
+		}
+		_clsDefaultProb[classId] = atof(items[i].c_str());
+		++i;
+		printf("classId = %d, Prob = %lf, defaultProb = %lf\n", classId, _classProb[classId], _clsDefaultProb[classId]);
+	}
 
-
+	for(map<int,double>::iterator it = _classProb.begin(); it != _classProb.end(); ++it){
+		int classId = it->first;
+		_clsWordProb[classId] = map<int, double>();
+		getline(fin, sline);
+		items = split(sline, ' ');
+		len = items.size();
+		for(int i = 0; i<len; ){
+			int wid = atoi(items[i].c_str());
+			if(_wordDict.find(wid) == _wordDict.end()){
+				_wordDict[wid] = 1;
+			}
+			else{
+				_wordDict[wid] += 1;
+			}
+		
+			i++;
+			if(i >= len){
+				printf("Model format error!\n");
+				return;
+			}
+			_clsWordProb[classId][wid] = atof(items[i].c_str());
+			i++;	
+			//printf("classId = %d, wid = %d, prob = %lf\n", classId, wid, _clsWordProb[classId][wid]);	
+		}
+	}
+	printf("_wordDict size = %d\n", _wordDict.size());
 }
 
 int main(int argc, char **argv) {
@@ -181,5 +227,4 @@ int main(int argc, char **argv) {
 	loadModel();
 	return 0;
 }
-
 

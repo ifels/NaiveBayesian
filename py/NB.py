@@ -1,4 +1,4 @@
-#! c:\python27\python
+#! /usr/bin/python
 #Usage:
 #Training: NB.py 1 TrainingDataFile ModelFile
 #Testing: NB.py 0 TestDataFile ModelFile OutFile
