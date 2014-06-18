@@ -1,0 +1,26 @@
+!_TAG_FILE_FORMAT	2	/extended format; --format=1 will not append ;" to lines/
+!_TAG_FILE_SORTED	1	/0=unsorted, 1=sorted, 2=foldcase/
+!_TAG_PROGRAM_AUTHOR	Darren Hiebert	/dhiebert@users.sourceforge.net/
+!_TAG_PROGRAM_NAME	Exuberant Ctags	//
+!_TAG_PROGRAM_URL	http://ctags.sourceforge.net	/official site/
+!_TAG_PROGRAM_VERSION	5.9~svn20110310	//
+BIN	./Makefile	/^BIN = NB$/;"	m
+CC	./Makefile	/^CC = g++$/;"	m
+CFLAGS	./Makefile	/^CFLAGS = -g -Wall -I. -I.\/$/;"	m
+DefaultFreq	./main.cpp	/^double DefaultFreq = 0.5;    \/\/平滑参数$/;"	v
+LDFLAGS	./Makefile	/^LDFLAGS = $/;"	m
+OBJS	./Makefile	/^OBJS = main.o $/;"	m
+_classFreq	./main.cpp	/^map<int, int> _classFreq;		\/\/分类的频度, Count(Yi), map<classId, classFreq>$/;"	v
+_classProb	./main.cpp	/^map<int, double> _classProb;	\/\/分类的频率， P(Yi), map<classId, classProb>$/;"	v
+_clsDefaultProb	./main.cpp	/^map<int, double> _clsDefaultProb;  \/\/某分类内没有出现的词的缺省概率, map<classId, defaultProb> $/;"	v
+_clsWordFreq	./main.cpp	/^map<int, map<int, int> > _clsWordFreq; \/\/分类内各词的频度, map<calssId, map<wid, count> >$/;"	v
+_clsWordProb	./main.cpp	/^map<int , map<int, double> > _clsWordProb; \/\/分类内各词的频率, map<calssId, map<wid, wordProb> >$/;"	v
+_modelFile	./main.cpp	/^string _modelFile;$/;"	v
+_testData	./main.cpp	/^string _testData;$/;"	v
+_wordDict	./main.cpp	/^map<int, int> _wordDict;  \/\/词典$/;"	v
+computeModel	./main.cpp	/^void computeModel(){$/;"	f
+loadData	./main.cpp	/^void loadData() {$/;"	f
+loadModel	./main.cpp	/^void loadModel(){$/;"	f
+main	./main.cpp	/^int main(int argc, char **argv) {$/;"	f
+saveModel	./main.cpp	/^void saveModel(){$/;"	f
+split	./main.cpp	/^vector<string> split(const string &s, char delim) {$/;"	f
