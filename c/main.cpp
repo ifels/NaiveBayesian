@@ -15,18 +15,19 @@ string _trainData;
 string _testData;
 string _modelFile;
 string _predictResult;
+string _evaluateResult;
 
-double DefaultFreq = 0.5;    //Æ½»¬²ÎÊı
+double DefaultFreq = 0.5;    //å¹³æ»‘å‚æ•°
 
-map<int, int> _wordDict;  //´Êµä
+map<int, int> _wordDict;  //è¯å…¸
 
-map<int, int> _classFreq;		//·ÖÀàµÄÆµ¶È, Count(Yi), map<classId, classFreq>
-map<int, double> _classProb;	//·ÖÀàµÄÆµÂÊ£¬ P(Yi), map<classId, classProb>
+map<int, int> _classFreq;		//åˆ†ç±»çš„é¢‘åº¦, Count(Yi), map<classId, classFreq>
+map<int, double> _classProb;	//åˆ†ç±»çš„é¢‘ç‡ï¼Œ P(Yi), map<classId, classProb>
 
 //Num(Xi, Yi)
-map<int, map<int, int> > _clsWordFreq; //·ÖÀàÄÚ¸÷´ÊµÄÆµ¶È, map<calssId, map<wid, count> >
-map<int , map<int, double> > _clsWordProb; //·ÖÀàÄÚ¸÷´ÊµÄÆµÂÊ, map<calssId, map<wid, wordProb> >
-map<int, double> _clsDefaultProb;  //Ä³·ÖÀàÄÚÃ»ÓĞ³öÏÖµÄ´ÊµÄÈ±Ê¡¸ÅÂÊ, map<classId, defaultProb> 
+map<int, map<int, int> > _clsWordFreq; //åˆ†ç±»å†…å„è¯çš„é¢‘åº¦, map<calssId, map<wid, count> >
+map<int , map<int, double> > _clsWordProb; //åˆ†ç±»å†…å„è¯çš„é¢‘ç‡, map<calssId, map<wid, wordProb> >
+map<int, double> _clsDefaultProb;  //æŸåˆ†ç±»å†…æ²¡æœ‰å‡ºç°çš„è¯çš„ç¼ºçœæ¦‚ç‡, map<classId, defaultProb> 
 
 vector<string> split(const string &s, char delim) {
     vector<string> elems;
@@ -40,6 +41,7 @@ vector<string> split(const string &s, char delim) {
 }
 
 void loadData() {
+	printf("\nloadData().....\n");
 	ifstream fin(_trainData.c_str());  
     string sline;  
 	int i = 0;
@@ -81,7 +83,7 @@ void loadData() {
 		}
 		i++;
 		
-		printf("parse file %d, calssId = %d, words.size = %d\n", i, classId, words.size());
+		//printf("parse file %d, calssId = %d, words.size = %d\n", i, classId, words.size());
 	}
 
 	map<int,int>::iterator it = _classFreq.begin();
@@ -94,6 +96,7 @@ void loadData() {
 }
 
 void computeModel(){
+	printf("\ncomputeModel.....\n");
 	int sum1 = 0;
 
 	//P(Yi)
@@ -111,14 +114,14 @@ void computeModel(){
 	for(map<int,int>::iterator it = _classFreq.begin(); it != _classFreq.end(); ++it){
 		double sum = 0.0;
 		int classId = it->first;
-		printf("classId = %d\n", classId);
-		printf("_clsWordFreq[%d].size = %d\n", classId, _clsWordFreq[classId].size());
+		//printf("classId = %d\n", classId);
+		//printf("_clsWordFreq[%d].size = %d\n", classId, _clsWordFreq[classId].size());
 		for(map<int,int>::iterator it2 = _clsWordFreq[classId].begin(); it2 != _clsWordFreq[classId].end(); ++it2){
 			sum += it2->second;
 		}
-		printf("_clsWordFreq[%d] words count = %f\n", classId, sum);	
+		//printf("_clsWordFreq[%d] words count = %f\n", classId, sum);	
 		
-		//Æ½»¬	
+		//å¹³æ»‘	
 		sum += _wordDict.size() * DefaultFreq;
 		_clsDefaultProb[classId] = DefaultFreq / sum;
 		printf("_clsDefaultProb[%d] = %lf\n", classId,  _clsDefaultProb[classId]);
@@ -132,6 +135,7 @@ void computeModel(){
 }
 
 void saveModel(){
+	printf("\nsaveModel.....\n");
 	ofstream out(_modelFile.c_str());
 
 	//P(Yj)
@@ -160,6 +164,7 @@ void saveModel(){
 }
 
 void loadModel(){
+	printf("\nloadModel.....\n");
 	_wordDict.clear();
 	_classProb.clear();
 	_clsWordProb.clear();
@@ -167,7 +172,7 @@ void loadModel(){
 	ifstream fin(_modelFile.c_str());
 	string sline;
 	getline(fin, sline);
-	printf("sline = %s\n", sline.c_str());
+	//printf("sline = %s\n", sline.c_str());
 	
 	vector<string> items = split(sline, ' ');
 	if(items.size() < 6){
@@ -189,7 +194,7 @@ void loadModel(){
 		}
 		_clsDefaultProb[classId] = atof(items[i].c_str());
 		++i;
-		printf("classId = %d, Prob = %lf, defaultProb = %lf\n", classId, _classProb[classId], _clsDefaultProb[classId]);
+		printf("_classProb[%d] = %lf, _clsDefaultProb[%d] = %lf\n", classId, _classProb[classId], classId, _clsDefaultProb[classId]);
 	}
 
 	for(map<int,double>::iterator it = _classProb.begin(); it != _classProb.end(); ++it){
@@ -223,6 +228,7 @@ void loadModel(){
 }
 
 void predict(){
+	printf("\npredict.....\n");
 	std::vector<int> trueLabelList;
 	std::vector<int> preLabelList;
 
@@ -279,7 +285,7 @@ void predict(){
 			j++;
 		}
 
-		printf("preClassId = %d, maxScore=%lf\n", preClassId, maxScore);
+		//printf("preClassId = %d, maxScore=%lf\n", preClassId, maxScore);
 
 		trueLabelList.push_back(trueClassId);
 		preLabelList.push_back(preClassId);
@@ -293,21 +299,108 @@ void predict(){
 }
 
 void evaluate(){
+	printf("\nevaluate.....\n");
 	ifstream fin(_predictResult.c_str());
+	ofstream out(_evaluateResult.c_str());
+
+	std::vector<int> trueLabelList;
+	std::vector<int> preLabelList;
+	float accuracy;
+	std::map<int, float> precisonDic;
+	std::map<int, float> recallDic;
+
 	string sline;
-	std::vector<string> items;  
+	std::vector<string> items;
+
+	//å‡†ç¡®ç‡(Accuracy)
+	//(C11 + C22) / (C11 + C12 + C21 + C22)
 	int total = 0;
-	int accuracy = 0;
+	int correct = 0;
     while(getline(fin, sline)){ 
     	items = split(sline, ' ');
+    	if(items.size() != 2){
+    		printf("_predict.result format error!");
+    		fin.close();
+    		out.close();
+    		return;
+    	}
     	int trueClassId = atoi(items[0].c_str());
     	int preClassId = atoi(items[1].c_str());
     	if(trueClassId == preClassId){
-			accuracy++;
+			correct++;
     	}
     	total++;
+
+    	trueLabelList.push_back(trueClassId);
+    	preLabelList.push_back(preClassId);
     }
+    //printf("correct = %d, total = %d\n", correct, total);
+
+    accuracy = correct * 1.0f / total;
+
+    //é’ˆå¯¹Yiçš„è¯„ä¼°
+    for(map<int,double>::iterator it = _classProb.begin(); it != _classProb.end(); ++it){
+    	int classId = it->first;
+    	total = 0;
+    	correct = 0;
+
+    	//ç²¾ç¡®ç‡(Precision, Yi), å…¬å¼ï¼šC11/(C11+C21), æ‰¾å¯¹Yiçš„æ¦‚ç‡
+    	for ( int i = 0 ; i < preLabelList.size() ; i++ )
+    	{
+    		if(preLabelList[i] != classId){
+    			continue;
+    		}
+       		if(preLabelList[i] == trueLabelList[i]){
+       			correct++;
+       		}
+       		total++;
+   		}
+   		precisonDic[classId] = correct * 1.0 / total;
+
+    	//å¬å›ç‡(Recallï¼Œ Yi)ï¼Œ å…¬å¼ C11/(C11 + C12)ï¼Œæ‰¾å‡ºYiçš„æ¦‚ç‡
+    	total = 0;
+    	correct = 0;
+    	for ( int i = 0 ; i < trueLabelList.size() ; i++ )
+    	{
+    		if(trueLabelList[i] != classId){
+    			continue;
+    		}
+       		if(preLabelList[i] == trueLabelList[i]){
+       			correct++;
+       		}
+       		total++;
+   		}
+   		recallDic[classId] = correct * 1.0 / total;
+    }
+
+
+    printf("accuracy = %f\n", accuracy);
+
+    out << "accuracy:\n";
+    out << accuracy;
+    out << "\n\n";
+
+    out << "precison:\n";
+    for(map<int, float>::iterator it = precisonDic.begin(); it != precisonDic.end(); ++it){
+    	printf("precison[%d] = %f\n", it->first, it->second);
+    	out << it->first;
+    	out <<" ";
+    	out << it->second;
+    	out << "\n";
+    }
+    
+    out << "\n";
+    out << "precall:\n";
+    for(map<int, float>::iterator it = recallDic.begin(); it != recallDic.end(); ++it){
+    	printf("recall[%d] = %f\n", it->first, it->second);
+    	out << it->first;
+    	out <<" ";
+    	out << it->second;
+    	out << "\n";
+    }
+
 	fin.close();
+	out.close();
 }
 
 int main(int argc, char **argv) {
@@ -315,14 +408,17 @@ int main(int argc, char **argv) {
 	_testData = "../data.test";
 	_modelFile = "../data.model";
 	_predictResult = "../predict.result";
+	_evaluateResult = "../evaluate.result";
 
-	//loadData();
-	//computeModel();
-	//saveModel();
+
+	loadData();
+	computeModel();
+	saveModel();
 
 	//
 	loadModel();
 	predict();
+	evaluate();
 
 	return 0;
 }
