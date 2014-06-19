@@ -1,8 +1,9 @@
 #include <iostream>
 #include <fstream>
 
-#include<stdio.h>
-#include<stdlib.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <math.h> 
 
 #include <sstream>
 #include <string>
@@ -13,6 +14,7 @@ using namespace std;
 string _trainData;
 string _testData;
 string _modelFile;
+string _predictResult;
 
 double DefaultFreq = 0.5;    //Æ½»¬²ÎÊý
 
@@ -88,6 +90,7 @@ void loadData() {
 	}
 
 	printf("wordDict size = %d\n", _wordDict.size());
+	fin.close();
 }
 
 void computeModel(){
@@ -175,11 +178,13 @@ void loadModel(){
 		int classId = atoi(items[i].c_str());
 		if(++i >= len){
 			printf("Model format error!\n");
+			fin.close();
 			return;
 		}
 		_classProb[classId] = atof(items[i].c_str());
 		if(++i >= len){
 			printf("Model format error!\n");
+			fin.close();
 			return;
 		}
 		_clsDefaultProb[classId] = atof(items[i].c_str());
@@ -205,6 +210,7 @@ void loadModel(){
 			i++;
 			if(i >= len){
 				printf("Model format error!\n");
+				fin.close();
 				return;
 			}
 			_clsWordProb[classId][wid] = atof(items[i].c_str());
@@ -213,18 +219,111 @@ void loadModel(){
 		}
 	}
 	printf("_wordDict size = %d\n", _wordDict.size());
+	fin.close();
+}
+
+void predict(){
+	std::vector<int> trueLabelList;
+	std::vector<int> preLabelList;
+
+	ifstream fin(_testData.c_str());
+	ofstream out(_predictResult.c_str());
+
+	std::vector<string> items;
+	string sline;  
+    while(getline(fin, sline)){  
+    	int pos = sline.find("#");
+		if(pos > 0){
+			sline = sline.substr(0, pos);
+		}
+		vector<string> items = split(sline, ' ');
+		if(items.size() < 1){
+			printf("Test data format error!");
+			continue;
+		}
+
+		int trueClassId = atoi(items[0].c_str());
+		int preClassId = 0;
+		double maxScore = 0.0f;
+		double curScore = 0.0f;
+
+		int j = 0;
+		
+		map<int, double> scoreDic;
+		for(map<int,double>::iterator it = _classProb.begin(); it!=_classProb.end(); ++it){
+			int classId = it->first;
+			curScore = log(it->second);
+			//printf("scoreDic[%d] = %lf, it->second = %lf\n", it->first, scoreDic[classId], it->second);
+			for(int i = 1; i < items.size(); i++){
+				int wid = atoi(items[i].c_str());
+				if(_wordDict.find(wid) == _wordDict.end()){
+					continue;
+				}
+				if(_clsWordProb[classId].find(wid) == _clsWordProb[classId].end()){
+					curScore += log(_clsDefaultProb[classId]);
+				}
+				else{
+					curScore += log(_clsWordProb[classId][wid]);
+				}
+			}
+
+			if(j == 0 ){
+				maxScore = curScore;
+				preClassId = classId;
+			}
+			else if(curScore > maxScore){
+				maxScore = curScore;
+				preClassId = classId;
+			}
+
+			j++;
+		}
+
+		printf("preClassId = %d, maxScore=%lf\n", preClassId, maxScore);
+
+		trueLabelList.push_back(trueClassId);
+		preLabelList.push_back(preClassId);
+		out << trueClassId;
+		out << " ";
+		out << preClassId;
+		out << "\n";
+    }
+    fin.close();
+    out.close();
+}
+
+void evaluate(){
+	ifstream fin(_predictResult.c_str());
+	string sline;
+	std::vector<string> items;  
+	int total = 0;
+	int accuracy = 0;
+    while(getline(fin, sline)){ 
+    	items = split(sline, ' ');
+    	int trueClassId = atoi(items[0].c_str());
+    	int preClassId = atoi(items[1].c_str());
+    	if(trueClassId == preClassId){
+			accuracy++;
+    	}
+    	total++;
+    }
+	fin.close();
 }
 
 int main(int argc, char **argv) {
 	_trainData = "../data.train";
 	_testData = "../data.test";
 	_modelFile = "../data.model";
-	loadData();
-	computeModel();
-	saveModel();
+	_predictResult = "../predict.result";
+
+	//loadData();
+	//computeModel();
+	//saveModel();
 
 	//
 	loadModel();
+	predict();
+
 	return 0;
 }
 
